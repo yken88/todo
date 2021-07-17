@@ -1,12 +1,18 @@
 <?php
-
-require_once './../../Model/Todo.php';
-require_once './../../validation/TodoValidation.php';
+require_once __DIR__.'/BaseController.php';
+require_once __DIR__.'/../Model/Todo.php';
+require_once __DIR__.'/../validation/TodoValidation.php';
 
 class TodoController
 {
-    public function index($user_id)
+    // public function __construct(){
+    //     BaseController::redirectToLogin();
+    // }
+
+    // user_idの取得をindexメソッド内に記述
+    public function index()
     {
+        $user_id = $_SESSION['user_id'];
         $todo_list = Todo::findAll($user_id);
         return $todo_list;
     }
@@ -29,7 +35,31 @@ class TodoController
         return $todo;
     }
 
-    function new () {
+
+    public function new () {
+        $data = array();
+      
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if (isset($_GET['title'])) {
+                $data["title"] = $_GET['title'];
+            }
+
+            if (isset($_GET['detail'])) {
+                $data["detail"] = $_GET['detail'];
+            }
+        }
+
+        if (!session_start()) {
+            echo "sessionがスタートできていません。";
+        }
+
+        $data["user_id"] = $_SESSION['user_id'];
+        $data["error_msgs"] = $_SESSION['error_msgs'];
+
+        return $data;
+    }
+
+    public function store(){
         $data = array(
             'title' => $_POST['title'],
             'detail' => $_POST['detail'],
@@ -221,9 +251,5 @@ class TodoController
         return $result;
     }
 
-    public static function logout(){
-        session_destroy();
-
-        header("Location: ../auth/login.php");
-    }
+    
 }

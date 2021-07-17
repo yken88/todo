@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $controller = new TodoController();
     $data = $controller->edit();
 }
+
 $todo = $data["todo"];
 $params = $data["params"];
 

@@ -17,6 +17,17 @@ class User
         return $this->error_msgs;
     }
 
+    public function setUserId()
+    {
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
+        $stmh = $pdo->query($query);
+
+        $user_id = $stmh->fetch();
+
+        $this->user_id = $user_id["id"];
+    }
+
     public function getUserId(){
         return $this->user_id;
     }
@@ -85,14 +96,5 @@ class User
         return $user;
     }
 
-    public function setUserId()
-    {
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
-        $stmh = $pdo->query($query);
-
-        $user_id = $stmh->fetch();
-
-        $this->user_id = $user_id;
-    }
+    
 }

@@ -1,20 +1,21 @@
 <?php
 session_start();
+require_once './../../controller/UserController.php';
 require_once './../../controller/TodoController.php';
 
+// logout処理をUserControllerに記述
 if($_GET["logout"]){
-    TodoController::logout();
+    UserController::logout();
 }
-$user = $_SESSION['user_id'];
 
-
-$controler = new TodoController;
-$todo_list = $controler->index($user["id"]);
+// $user_idの取得をTodoControllerのindexメソッド内に移動
+$todo_list = TodoController::index();
 
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
 
 ?>
+
 <?php require_once("../layouts/header.php"); ?>
 
 </head>
@@ -63,7 +64,7 @@ unset($_SESSION['error_msgs']);
             let data = {};
             data.todo_id = todo_id;
             $.ajax({
-                url: './delete.php',
+                url: '../../../api/delete.php',
                 type: 'post',
                 data: data
             }).then(
@@ -93,7 +94,7 @@ unset($_SESSION['error_msgs']);
         let data = {};
         data.todo_id = todo_id;
         $.ajax({
-                url: './update_status.php',
+                url: '../app/api/update_status.php',
                 type: 'post',
                 data: data
             }).then(
