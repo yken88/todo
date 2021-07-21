@@ -3,12 +3,8 @@ require_once __DIR__.'/BaseController.php';
 require_once __DIR__.'/../Model/Todo.php';
 require_once __DIR__.'/../validation/TodoValidation.php';
 
-class TodoController
+class TodoController extends BaseController
 {
-    // public function __construct(){
-    //     BaseController::redirectToLogin();
-    // }
-
     // user_idの取得をindexメソッド内に記述
     public function index()
     {
@@ -83,7 +79,7 @@ class TodoController
         $todo->setTitle($valid_data['title']);
         $todo->setDetail($valid_data['detail']);
 
-        $user_id = $_POST['user_id'];
+        $user_id = $_SESSION['user_id'];
         $todo->setUserId($user_id);
         $result = $todo->save();
 
@@ -99,23 +95,22 @@ class TodoController
     public function edit()
     {
         $todo_id = '';
-
-        $params = array();
-
         if (isset($_GET['todo_id'])) {
             $todo_id = $_GET['todo_id'];
         }
+        // 404への遷移処理を$todo_id取得した次に。
+        if (!$todo_id) {
+            header("Location: ./../error/404.php");
+            return;
+        }
+
+        $params = array();
         if (isset($_GET['title'])) {
             $params["title"] = $_GET["title"];
         }
 
         if (isset($_GET['detail'])) {
             $params["detail"] = $_GET["detail"];
-        }
-
-        if (!$todo_id) {
-            header("Location: ./../error/404.php");
-            return;
         }
 
         if (Todo::isExistById($todo_id) === false) {
