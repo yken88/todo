@@ -1,6 +1,6 @@
 <?php
 
-require_once './../../controller/TodoController.php';
+require_once '../Controller/TodoController.php';
 
 $controler = new TodoController;
 $result = $controler->updateStatus();
