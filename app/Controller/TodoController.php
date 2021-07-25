@@ -13,6 +13,21 @@ class TodoController extends BaseController
         return $todo_list;
     }
 
+    // 検索機能
+    public function searchTodo(){
+        $title = $_GET["title"];
+
+        // ステータスが選択されていなければ、未完了。
+        if(!$_GET["status"]){
+            $status = Todo::STATUS_INCOMPLETE;
+        }else{
+            $status = $_GET["status"];
+        }
+        
+        $todo_list = Todo::search($title, $status);
+        return $todo_list;
+    }
+
     public function detail()
     {
         $todo_id = $_GET['todo_id'];

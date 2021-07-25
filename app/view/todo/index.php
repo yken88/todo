@@ -3,6 +3,7 @@ session_start();
 require_once './../../controller/UserController.php';
 require_once './../../controller/TodoController.php';
 
+
 // logout処理をUserControllerに記述
 if($_GET["logout"]){
     UserController::logout();
@@ -10,6 +11,10 @@ if($_GET["logout"]){
 
 // $user_idの取得をTodoControllerのindexメソッド内に移動
 $todo_list = TodoController::index();
+
+if($_GET["title"] || $_GET["status"]){
+    $todo_list = TodoController::searchTodo();
+}
 
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
@@ -26,6 +31,12 @@ unset($_SESSION['error_msgs']);
 <h1>TODO リスト</h1>
 <div class="new"><a href="./new.php">新規作成</a></div>
 <div class="text-center">
+    <form action="" method="get">
+        <input type="text" name="title" placeholder="title">
+        <input type="radio" name="status" value='0'>未完了
+        <input type="radio" name="status" value='1'>完了
+        <input type="submit" value="検索する">
+    </form>
 <?php if ($todo_list): ?>
     <ul class="list-group" style="max-width: 400px;">
         <?php foreach ($todo_list as $todo): ?>
@@ -33,7 +44,7 @@ unset($_SESSION['error_msgs']);
             <label>
                 <input type="checkbox" class="todo-checkbox" data-id="<?php echo $todo['id']; ?>" <?php if ($todo['status']): ?>checked<?php endif;?>>
             </label>
-                <a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title']; ?></a>
+                <a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title']; ?></a> 
                 :<span class="status"><?php echo $todo['display_status']; ?></span>
                 <div class="delete-btn" data-id="<?php echo $todo['id']; ?>">
                     <div style="margin-left1"><button>削除</button></div>
@@ -94,11 +105,13 @@ unset($_SESSION['error_msgs']);
         let data = {};
         data.todo_id = todo_id;
         $.ajax({
-                url: '../app/api/update_status.php',
+                url: '../../../api/update_status.php',
                 type: 'post',
                 data: data
             }).then(
                 function (data) {
+                    console.log(data);
+                    return;
                     let json = JSON.parse(data);
                     if (json.result == 'success') {
                         console.log("success");

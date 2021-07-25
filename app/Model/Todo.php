@@ -3,7 +3,6 @@ require_once __DIR__ . '/../config/db.php';
 
 class Todo
 {
-
     const STATUS_INCOMPLETE = 0;
     const STATUS_COMPLETED = 1;
 
@@ -57,20 +56,6 @@ class Todo
         $this->user_id = $user_id;
     }
 
-    public static function findByQuery($query)
-    {
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query($query);
-
-        if ($stmh) {
-            $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
-        } else {
-            $todo_list = array();
-        }
-
-        return $todo_list;
-    }
-
     public static function findAll($user_id)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
@@ -89,6 +74,23 @@ class Todo
             }
         }
 
+        return $todo_list;
+    }
+
+    // 検索機能
+    public static function search($title, $status){
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        $query = sprintf("SELECT * FROM todos WHERE `title` = '%s' AND `status` = '%s'", $title, $status);
+        $stmh = $pdo->query($query);
+
+        $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
+        return $todo_list;
+    }
+
+    public static function searchByStatus($status){
+        $query = sprintf("SELECT * FROM todos WHERE `status` = '%d'", $status);
+
+        $todo_list = self::findByQuery($query);
         return $todo_list;
     }
 
