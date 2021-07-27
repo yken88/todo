@@ -9,12 +9,8 @@ if($_GET["logout"]){
     UserController::logout();
 }
 
-// $user_idの取得をTodoControllerのindexメソッド内に移動
+// index()メソッドのみを呼ぶ
 $todo_list = TodoController::index();
-
-if($_GET["title"] || $_GET["status"]){
-    $todo_list = TodoController::searchTodo();
-}
 
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
@@ -33,7 +29,8 @@ unset($_SESSION['error_msgs']);
 <div class="text-center">
     <form action="" method="get">
         <input type="text" name="title" placeholder="title">
-        <input type="radio" name="status" value='0'>未完了
+        <!-- 未完了をデフォルトにする -->
+        <input type="radio" name="status" value='0' checked="checked">未完了
         <input type="radio" name="status" value='1'>完了
         <input type="submit" value="検索する">
     </form>

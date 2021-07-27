@@ -56,10 +56,8 @@ class Todo
         $this->user_id = $user_id;
     }
 
-    public static function findAll($user_id)
-    {
+    public static function findByQuery($query){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT * FROM todos WHERE `user_id` = '%s'", $user_id);
         $stmh = $pdo->query($query);
 
         if ($stmh) {
@@ -68,29 +66,24 @@ class Todo
             $todo_list = array();
         }
 
-        if ($todo_list && count($todo_list) > 0) {
-            foreach ($todo_list as $index => $todo) {
-                $todo_list[$index]['display_status'] = self::getDisplayStatus($todo['status']);
-            }
-        }
-
         return $todo_list;
     }
+
 
     // 検索機能
-    public static function search($title, $status){
+    public static function search($user_id, $title, $status){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT * FROM todos WHERE `title` = '%s' AND `status` = '%s'", $title, $status);
-        $stmh = $pdo->query($query);
+
+        // タイトルは部分一致で検索。
+        // バインドバリューを使うことで、SQLインジェクションを防ぐ。
+        $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ?");
+        $stmh->bindValue(1, $user_id);
+        $stmh->bindValue(2, '%'.$title.'%');
+        $stmh->bindValue(3, (int)$status);
+        $stmh->execute();
 
         $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
-        return $todo_list;
-    }
-
-    public static function searchByStatus($status){
-        $query = sprintf("SELECT * FROM todos WHERE `status` = '%d'", $status);
-
-        $todo_list = self::findByQuery($query);
+        
         return $todo_list;
     }
 

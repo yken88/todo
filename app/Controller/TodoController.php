@@ -5,28 +5,24 @@ require_once __DIR__.'/../validation/TodoValidation.php';
 
 class TodoController extends BaseController
 {
-    // user_idの取得をindexメソッド内に記述
+    // 
     public function index()
     {
         $user_id = $_SESSION['user_id'];
-        $todo_list = Todo::findAll($user_id);
-        return $todo_list;
-    }
+       
+        $query = sprintf("SELECT * FROM todos WHERE `user_id` = %s;", $user_id);
+        $todo_list = Todo::findByQuery($query);
 
-    // 検索機能
-    public function searchTodo(){
-        $title = $_GET["title"];
-
-        // ステータスが選択されていなければ、未完了。
-        if(!$_GET["status"]){
-            $status = Todo::STATUS_INCOMPLETE;
-        }else{
+        // 検索ボタンが押されていれば、Todo::search()を呼ぶ
+        if($_GET["title"] !== "" || $_GET["status"] !== ""){
+            $title = $_GET["title"];
             $status = $_GET["status"];
+            $todo_list = Todo::search($user_id, $title, $status);
         }
         
-        $todo_list = Todo::search($title, $status);
         return $todo_list;
     }
+
 
     public function detail()
     {
