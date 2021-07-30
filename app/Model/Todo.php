@@ -71,16 +71,33 @@ class Todo
 
 
     // 検索機能
-    public static function search($user_id, $title, $status){
+    public static function search($user_id, $title = "", $status = ""){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
 
-        // タイトルは部分一致で検索。
-        // バインドバリューを使うことで、SQLインジェクションを防ぐ。
-        $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ?");
-        $stmh->bindValue(1, $user_id);
-        $stmh->bindValue(2, '%'.$title.'%');
-        $stmh->bindValue(3, (int)$status);
-        $stmh->execute();
+        // title のみ入力されている
+        if($title == "" && $status !== ""){
+            $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ?");
+            $stmh->bindValue(1, $user_id);
+            $stmh->bindValue(2, '%'.$title.'%');
+            $stmh->execute();
+        }
+
+        // status のみ入力されている
+        if($title !== "" && $status == ""){
+            $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `status` = ?");
+            $stmh->bindValue(1, $user_id);
+            $stmh->bindValue(2, $status);
+            $stmh->execute();
+        }
+
+        // title, status 入力されている。
+        if($title !== "" && $status !== ""){
+            $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ?");
+            $stmh->bindValue(1, $user_id);
+            $stmh->bindValue(2, '%'.$title.'%');
+            $stmh->bindValue(3, (int)$status);
+            $stmh->execute();
+        }
 
         $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
         

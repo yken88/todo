@@ -9,15 +9,15 @@ class TodoController extends BaseController
     public function index()
     {
         $user_id = $_SESSION['user_id'];
-       
-        $query = sprintf("SELECT * FROM todos WHERE `user_id` = %s;", $user_id);
-        $todo_list = Todo::findByQuery($query);
 
-        // 検索ボタンが押されていれば、Todo::search()を呼ぶ
-        if($_GET["title"] !== "" || $_GET["status"] !== ""){
+        //検索用GETパラメータがあればTodo::search()
+        if($_GET["title"] !== "" || $_GET["status"] == ""){
             $title = $_GET["title"];
             $status = $_GET["status"];
             $todo_list = Todo::search($user_id, $title, $status);
+        }else{
+            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %s;", $user_id);
+            $todo_list = Todo::findByQuery($query);
         }
         
         return $todo_list;
@@ -54,10 +54,6 @@ class TodoController extends BaseController
             if (isset($_GET['detail'])) {
                 $data["detail"] = $_GET['detail'];
             }
-        }
-
-        if (!session_start()) {
-            echo "sessionがスタートできていません。";
         }
 
         $data["user_id"] = $_SESSION['user_id'];

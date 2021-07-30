@@ -29,8 +29,7 @@ unset($_SESSION['error_msgs']);
 <div class="text-center">
     <form action="" method="get">
         <input type="text" name="title" placeholder="title">
-        <!-- 未完了をデフォルトにする -->
-        <input type="radio" name="status" value='0' checked="checked">未完了
+        <input type="radio" name="status" value='0'>未完了
         <input type="radio" name="status" value='1'>完了
         <input type="submit" value="検索する">
     </form>
