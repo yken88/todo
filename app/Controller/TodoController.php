@@ -5,7 +5,6 @@ require_once __DIR__.'/../validation/TodoValidation.php';
 
 class TodoController extends BaseController
 {
-    // 
     public function index()
     {
         $user_id = $_SESSION['user_id'];
@@ -22,7 +21,14 @@ class TodoController extends BaseController
         
         return $todo_list;
     }
+    
+    public function sort(){
+        $user_id = $_SESSION["user_id"];
+        $sort_order = (int)$_POST["sort_order"];
+        $todo_list = Todo::sort($user_id, $sort_order);
 
+        return $todo_list;
+    }
 
     public function detail()
     {

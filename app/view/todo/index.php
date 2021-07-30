@@ -3,14 +3,20 @@ session_start();
 require_once './../../controller/UserController.php';
 require_once './../../controller/TodoController.php';
 
-
 // logout処理をUserControllerに記述
 if($_GET["logout"]){
     UserController::logout();
 }
 
-// index()メソッドのみを呼ぶ
-$todo_list = TodoController::index();
+// POSTでソート
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $todo_list = TodoController::sort();
+}
+
+// GETで一覧
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $todo_list = TodoController::index();
+}
 
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
@@ -33,22 +39,28 @@ unset($_SESSION['error_msgs']);
         <input type="radio" name="status" value='1'>完了
         <input type="submit" value="検索する">
     </form>
+
+    <form action="" method="POST">
+        <button type="submit" name="sort_order" value="0">▼</button>
+        <button type="submit" name="sort_order" value="1">▲</button>
+    </form>
 <?php if ($todo_list): ?>
-    <ul class="list-group" style="max-width: 400px;">
-        <?php foreach ($todo_list as $todo): ?>
-            <li class="list-group-item" style="display: flex;">
-            <label>
-                <input type="checkbox" class="todo-checkbox" data-id="<?php echo $todo['id']; ?>" <?php if ($todo['status']): ?>checked<?php endif;?>>
-            </label>
-                <a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title']; ?></a> 
-                :<span class="status"><?php echo $todo['display_status']; ?></span>
-                <div class="delete-btn" data-id="<?php echo $todo['id']; ?>">
-                    <div style="margin-left1"><button>削除</button></div>
-                </div>
-            </li>
-        <?php endforeach;?>
-    </ul>
-</div>
+        <ul style="max-width: 400px;">
+            <?php foreach ($todo_list as $todo): ?>
+                <li class="list-group-item" style="display: flex;">
+                <label>
+                    <input type="checkbox" class="todo-checkbox" data-id="<?php echo $todo['id']; ?>" <?php if ($todo['status']): ?>checked<?php endif;?>>
+                </label>
+                    <a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title']; ?></a> 
+                    :<span class="status"><?php echo $todo['display_status']; ?></span>
+                    <div class="delete-btn" data-id="<?php echo $todo['id']; ?>">
+                        <div style="margin-left1"><button>削除</button></div>
+                    </div>
+                </li>
+            <?php endforeach;?>
+        </ul>
+    </div>
+
 <?php else: ?>
     <p>データなし</p>
 <?php endif;?>

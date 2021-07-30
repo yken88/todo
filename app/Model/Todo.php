@@ -9,6 +9,9 @@ class Todo
     const STATUS_INCOMPLETE_TXT = "未完了";
     const STATUS_COMPLETE_TXT = "完了";
 
+    const OLDEST = 0;
+    const LATEST = 1;
+
     public $id;
     public $title;
     public $detail;
@@ -245,4 +248,18 @@ class Todo
 
         return $result;
     }
+   public function sort($user_id, $sort_order){
+       if($sort_order === self::OLDEST){
+           $query = sprintf("select * from todos where user_id = %s order by created_at asc;", $user_id);
+       }
+
+       if($sort_order === self::LATEST){
+           $query = sprintf("select * from todos where user_id = %s order by created_at desc;", $user_id);
+       }
+
+       $todo_list = self::findByQuery($query);
+
+       return $todo_list;
+
+   }
 }
