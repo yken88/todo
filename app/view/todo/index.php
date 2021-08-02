@@ -8,11 +8,6 @@ if($_GET["logout"]){
     UserController::logout();
 }
 
-// POSTでソート
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $todo_list = TodoController::sort();
-}
-
 // GETで一覧
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $todo_list = TodoController::index();
@@ -34,16 +29,17 @@ unset($_SESSION['error_msgs']);
 <div class="new"><a href="./new.php">新規作成</a></div>
 <div class="text-center">
     <form action="" method="get">
-        <input type="text" name="title" placeholder="title">
+        <input type="text" name="title" value="<?php echo $_GET["title"];?>">
         <input type="radio" name="status" value='0'>未完了
         <input type="radio" name="status" value='1'>完了
+        <input type="radio" name="sort" value="0" class="btn">▼
+        <input type="radio" name="sort" value="1" class="btn">▲
         <input type="submit" value="検索する">
     </form>
 
-    <form action="" method="POST">
-        <button type="submit" name="sort_order" value="0">▼</button>
-        <button type="submit" name="sort_order" value="1">▲</button>
-    </form>
+    <!-- <form action="" method="GET">
+        
+    </form> -->
 <?php if ($todo_list): ?>
         <ul style="max-width: 400px;">
             <?php foreach ($todo_list as $todo): ?>

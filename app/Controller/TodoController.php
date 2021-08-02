@@ -9,24 +9,27 @@ class TodoController extends BaseController
     {
         $user_id = $_SESSION['user_id'];
 
+        $sort = $_GET["sort"];
+
         //検索用GETパラメータがあればTodo::search()
-        if($_GET["title"] !== "" || $_GET["status"] == ""){
+        if($_GET["title"] !== "" || isset($_GET["status"])){
             $title = $_GET["title"];
             $status = $_GET["status"];
             $todo_list = Todo::search($user_id, $title, $status);
-        }else{
-            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %s;", $user_id);
-            $todo_list = Todo::findByQuery($query);
-        }
-        
-        return $todo_list;
-    }
-    
-    public function sort(){
-        $user_id = $_SESSION["user_id"];
-        $sort_order = (int)$_POST["sort_order"];
-        $todo_list = Todo::sort($user_id, $sort_order);
 
+            // 修正 search()に$sortを渡す。
+            if($sort){
+                $todo_list = Todo::search($user_id, $title, $status, $sort);
+            }
+        }else{
+            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d;", $user_id);
+            $todo_list = Todo::findByQuery($query);
+
+            // 修正 findByQuery()に$sortを渡す。
+            if($sort){
+                $todo_list = Todo::findByQuery($query, $sort);   
+            }
+        }
         return $todo_list;
     }
 

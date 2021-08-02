@@ -9,9 +9,6 @@ class Todo
     const STATUS_INCOMPLETE_TXT = "未完了";
     const STATUS_COMPLETE_TXT = "完了";
 
-    const OLDEST = 0;
-    const LATEST = 1;
-
     public $id;
     public $title;
     public $detail;
@@ -59,7 +56,7 @@ class Todo
         $this->user_id = $user_id;
     }
 
-    public static function findByQuery($query){
+    public static function findByQuery($query, $sort = null){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
         $stmh = $pdo->query($query);
 
@@ -69,16 +66,19 @@ class Todo
             $todo_list = array();
         }
 
+        if($sort){
+            arsort($todo_list);
+        }
         return $todo_list;
     }
 
 
-    // 検索機能
-    public static function search($user_id, $title = "", $status = ""){
+    // 修正 $sortを渡せるように
+    public static function search($user_id, $title = "", $status = null, $sort = null){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
 
         // title のみ入力されている
-        if($title == "" && $status !== ""){
+        if($title !== "" && is_null($status)){
             $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ?");
             $stmh->bindValue(1, $user_id);
             $stmh->bindValue(2, '%'.$title.'%');
@@ -86,7 +86,7 @@ class Todo
         }
 
         // status のみ入力されている
-        if($title !== "" && $status == ""){
+        if($title == "" && !is_null($status)){
             $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `status` = ?");
             $stmh->bindValue(1, $user_id);
             $stmh->bindValue(2, $status);
@@ -94,7 +94,7 @@ class Todo
         }
 
         // title, status 入力されている。
-        if($title !== "" && $status !== ""){
+        if($title !== "" && !is_null($status)){
             $stmh = $pdo->prepare("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ?");
             $stmh->bindValue(1, $user_id);
             $stmh->bindValue(2, '%'.$title.'%');
@@ -102,8 +102,13 @@ class Todo
             $stmh->execute();
         }
 
-        $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
         
+        $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
+
+        if($sort){
+            arsort($todo_list);
+        }
+
         return $todo_list;
     }
 
@@ -248,18 +253,4 @@ class Todo
 
         return $result;
     }
-   public function sort($user_id, $sort_order){
-       if($sort_order === self::OLDEST){
-           $query = sprintf("select * from todos where user_id = %s order by created_at asc;", $user_id);
-       }
-
-       if($sort_order === self::LATEST){
-           $query = sprintf("select * from todos where user_id = %s order by created_at desc;", $user_id);
-       }
-
-       $todo_list = self::findByQuery($query);
-
-       return $todo_list;
-
-   }
 }
