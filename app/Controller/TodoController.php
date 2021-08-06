@@ -5,31 +5,44 @@ require_once __DIR__.'/../validation/TodoValidation.php';
 
 class TodoController extends BaseController
 {
+    private const INITIAL_OFFSET = 0;
+
     public function index()
     {
         $user_id = $_SESSION['user_id'];
-
+        $page = $_GET["page"];
         $sort = $_GET["sort"];
 
+        $offset = self::INITIAL_OFFSET;
+        if($page){
+            $offset = ($page - 1) * 5;
+        }
+
         //検索用GETパラメータがあればTodo::search()
-        if($_GET["title"] !== "" || isset($_GET["status"])){
+        if($_GET["title"] != "" || isset($_GET["status"])){
             $title = $_GET["title"];
             $status = $_GET["status"];
-            $todo_list = Todo::search($user_id, $title, $status);
 
             // 修正 search()に$sortを渡す。
-            if($sort){
-                $todo_list = Todo::search($user_id, $title, $status, $sort);
+            if(is_null($sort)){
+                $todo_list = Todo::search($user_id, $title, $status, $offset);
+            }else{
+                $todo_list = Todo::search($user_id, $title, $status, $sort, $offset);
             }
-        }else{
-            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d;", $user_id);
-            $todo_list = Todo::findByQuery($query);
 
-            // 修正 findByQuery()に$sortを渡す。
-            if($sort){
-                $todo_list = Todo::findByQuery($query, $sort);   
-            }
         }
+        // 検索なし
+        if($_GET == array() || $_GET["title"] == ""){
+            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d LIMIT %d, 5;", $user_id, $offset);
+
+            if($sort){
+                $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d ORDER BY `created_at` %s LIMIT %d, 5;", $user_id, $sort, $offset);
+            }
+
+            $todo_list = Todo::findByQuery($query);
+        }
+
+        
         return $todo_list;
     }
 
