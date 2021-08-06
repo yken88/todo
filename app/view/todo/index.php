@@ -1,8 +1,11 @@
 <?php
+ini_set('display_errors', "On");
+
 session_start();
 require_once './../../controller/UserController.php';
 require_once './../../controller/TodoController.php';
 
+$max_page = 3;
 // logout処理をUserControllerに記述
 if($_GET["logout"]){
     UserController::logout();
@@ -15,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
 $error_msgs = $_SESSION['error_msgs'];
 unset($_SESSION['error_msgs']);
-
 ?>
 
 <?php require_once("../layouts/header.php"); ?>
@@ -30,16 +32,14 @@ unset($_SESSION['error_msgs']);
 <div class="text-center">
     <form action="" method="get">
         <input type="text" name="title" value="<?php echo $_GET["title"];?>">
-        <input type="radio" name="status" value='0'>未完了
-        <input type="radio" name="status" value='1'>完了
-        <input type="radio" name="sort" value="0" class="btn">▼
-        <input type="radio" name="sort" value="1" class="btn">▲
+        <input type="radio" name="status" value="0">未完了
+        <input type="radio" name="status" value="1">完了
+        <input type="radio" name="sort" value="DESC" class="btn">▼
+        <input type="radio" name="sort" value="ASC" class="btn">▲
         <input type="submit" value="検索する">
     </form>
-
-    <!-- <form action="" method="GET">
-        
-    </form> -->
+</div>
+<div class="mx-auto" style="width: 500px;">
 <?php if ($todo_list): ?>
         <ul style="max-width: 400px;">
             <?php foreach ($todo_list as $todo): ?>
@@ -47,7 +47,7 @@ unset($_SESSION['error_msgs']);
                 <label>
                     <input type="checkbox" class="todo-checkbox" data-id="<?php echo $todo['id']; ?>" <?php if ($todo['status']): ?>checked<?php endif;?>>
                 </label>
-                    <a href="./detail.php?todo_id=<?php echo $todo['id'] ?>"><?php echo $todo['title']; ?></a> 
+                    <a href="./detail.php?todo_id=<?php echo $todo['id']; ?>"><?php echo $todo['title']; ?></a> 
                     :<span class="status"><?php echo $todo['display_status']; ?></span>
                     <div class="delete-btn" data-id="<?php echo $todo['id']; ?>">
                         <div style="margin-left1"><button>削除</button></div>
@@ -55,11 +55,18 @@ unset($_SESSION['error_msgs']);
                 </li>
             <?php endforeach;?>
         </ul>
-    </div>
-
+        
 <?php else: ?>
     <p>データなし</p>
 <?php endif;?>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <?php for($i=1;$i<=$max_page;$i++):?>
+            <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $i;?>"><?php echo $i;?></a></li>
+            <?php endfor;?>
+        </ul>
+    </nav>
+</div>
 
 <?php if ($error_msgs): ?>
     <div>
@@ -70,6 +77,8 @@ unset($_SESSION['error_msgs']);
         </ul>
     </div>
 <?endif;?>
+
+
 <script src="./../../public/js/jquery-3.6.0.js"></script>
 <script>
     $(".delete-btn").click(function () {
