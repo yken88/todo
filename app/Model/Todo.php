@@ -9,11 +9,15 @@ class Todo
     const STATUS_INCOMPLETE_TXT = "未完了";
     const STATUS_COMPLETE_TXT = "完了";
 
+    const LIMIT = 5;
+
     public $id;
     public $title;
     public $detail;
     public $status;
     public $user_id;
+
+
 
     public function getId()
     {
@@ -69,57 +73,52 @@ class Todo
         return $todo_list;
     }
 
+    private static function buildQuery($params, $offset, $sort = null){
+        $query = 'SELECT * FROM todos WHERE `user_id` = :user_id ';
+        foreach($params as $key => $param){
+            if($key === 'title'){
+                $query .= 'AND `title` LIKE :title ';
+            }elseif($param !== null){
+                $query .= 'AND `status` = :status ';
+            }
+        }
+
+        if($sort){
+            $query .= sprintf("ORDER BY `created_at` %s", $sort); 
+        }
+
+        // offsetを追加
+        $query .= sprintf("LIMIT %d, %d;", $offset, self::LIMIT);
+
+        return $query;
+    }
+
+    // execute()に渡す配列を動的に。
+    private static function buildArray($user_id, $title = "", $status = null){
+        $bindArr = array();
+        $bindArr[':user_id'] = $user_id;
+
+        if($title !== ""){
+            $bindArr[':title'] = '%'.$title.'%';
+        }
+
+        if(!is_null($status)){
+            $bindArr[':status'] = $status;
+        }
+        
+        return $bindArr;
+        
+    }
 
     // 修正 $sortを渡せるように
-    public static function search($user_id, $title = "", $status = null, $offset, $sort = null){
+    public static function search($user_id, $params, $offset, $sort = null){
+        $query = self::buildQuery($params, $offset, $sort);
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-
-        // titleのみ
-        if($title != "" && is_null($status)){
-            if(!is_null($sort)){
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? ORDER BY `created_at` %s LIMIT %d, 5;", $sort, $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, '%'.$title.'%');
-            }else{
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? LIMIT %d, 5;", $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, '%'.$title.'%');
-            }
-        }
-
-        // statusのみ
-        if($title == "" && !is_null($status)){
-            if(!is_null($sort)){
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `status` = ? ORDER BY `created_at` %s LIMIT %d, 5;", $sort, $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, $status);       
-            }else{
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `status` = ? LIMIT %d, 5;", $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, $status);
-            }
-            
-        }
-
-        // title, status 
-        if($title != "" && !is_null($status)){
-            echo "title status";
-            if(!is_null($sort)){
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ? ORDER BY `created_at` %s LIMIT %d, 5;", $sort, $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, '%'.$title.'%');
-                $stmh->bindValue(3, $status);
-                $stmh->bindValue(4, $sort);
-            }else{
-                $stmh = $pdo->prepare(sprintf("SELECT * FROM todos WHERE `user_id` = ? AND `title` LIKE ? AND `status` = ? LIMIT %d, 5;", $offset));
-                $stmh->bindValue(1, $user_id);
-                $stmh->bindValue(2, '%'.$title.'%');
-                $stmh->bindValue(3, $status);
-            }
-        }
-
-        $stmh->execute();
+        $stmh = $pdo->prepare($query);
+        $bindArr = self::buildArray($user_id, $params['title'], $params['status']);
+        $stmh->execute($bindArr);
         $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
+
 
         return $todo_list;
     }
@@ -267,7 +266,8 @@ class Todo
     }
 
     // ページの上限
-    public static function getMaxPage($user_id){
+    public static function getMaxPage(){
+        $user_id = $_SESSION["user_id"];
         $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d;", $user_id);
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
         $stmh = $pdo->query($query);
@@ -278,6 +278,5 @@ class Todo
         $max_page = ceil($count / 5);
 
         return $max_page;
-        
     }
 }

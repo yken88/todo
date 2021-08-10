@@ -5,7 +5,21 @@ require_once __DIR__.'/../validation/TodoValidation.php';
 
 class TodoController extends BaseController
 {
-    private const INITIAL_OFFSET = 0;
+    private const DEFAULT_OFFSET = 0;
+    public $max_page;
+
+
+    public function __construct(){
+        $this->setMaxPage();
+    }
+
+    public function setMaxPage(){
+        $this->max_page = Todo::getMaxPage();
+    }
+
+    public function getMaxPage(){
+        return $this->max_page;
+    }
 
     public function index()
     {
@@ -13,7 +27,7 @@ class TodoController extends BaseController
         $page = $_GET["page"];
         $sort = $_GET["sort"];
 
-        $offset = self::INITIAL_OFFSET;
+        $offset = self::DEFAULT_OFFSET;
         if($page){
             $offset = ($page - 1) * 5;
         }
@@ -23,26 +37,31 @@ class TodoController extends BaseController
             $title = $_GET["title"];
             $status = $_GET["status"];
 
-            // 修正 search()に$sortを渡す。
+            $params = array(
+                'title' => $title,
+                'status' => $status
+            );
+
+            // search()に$sortを渡す。
             if(is_null($sort)){
-                $todo_list = Todo::search($user_id, $title, $status, $offset);
+                $todo_list = Todo::search($user_id, $params, $offset);
             }else{
-                $todo_list = Todo::search($user_id, $title, $status, $sort, $offset);
+                $todo_list = Todo::search($user_id, $params, $offset, $sort);
             }
 
         }
+
         // 検索なし
         if($_GET == array() || $_GET["title"] == ""){
-            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d LIMIT %d, 5;", $user_id, $offset);
+            $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d LIMIT %d, %d;", $user_id, $offset, Todo::LIMIT);
 
             if($sort){
-                $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d ORDER BY `created_at` %s LIMIT %d, 5;", $user_id, $sort, $offset);
+                $query = sprintf("SELECT * FROM todos WHERE `user_id` = %d ORDER BY `created_at` %s LIMIT %d, %d;", $user_id, $sort, $offset, Todo::LIMIT);
             }
 
             $todo_list = Todo::findByQuery($query);
         }
 
-        
         return $todo_list;
     }
 

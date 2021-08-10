@@ -5,7 +5,8 @@ session_start();
 require_once './../../controller/UserController.php';
 require_once './../../controller/TodoController.php';
 
-$max_page = 3;
+$controller = new TodoController;
+$max_page = $controller->getMaxPage();
 // logout処理をUserControllerに記述
 if($_GET["logout"]){
     UserController::logout();
@@ -13,7 +14,7 @@ if($_GET["logout"]){
 
 // GETで一覧
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $todo_list = TodoController::index();
+    $todo_list = $controller->index();
 }
 
 $error_msgs = $_SESSION['error_msgs'];
@@ -62,7 +63,14 @@ unset($_SESSION['error_msgs']);
     <nav aria-label="Page navigation example">
         <ul class="pagination">
             <?php for($i=1;$i<=$max_page;$i++):?>
-            <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $i;?>"><?php echo $i;?></a></li>
+            <li class="page-item"><a class="page-link" href=
+            "<?php if($_GET['title'] !== ""):?>
+                index.php?title=<?php echo $_GET['title'];?>&page=<?php echo $i;?>
+            <?php else:?>
+                index.php?page=<?php echo $i;?>
+            <?php endif;?>"
+                
+            ><?php echo $i;?></a></li>
             <?php endfor;?>
         </ul>
     </nav>
