@@ -20,16 +20,17 @@ unset($_SESSION["error_msgs"]);
 <div class="mx-auto" style="width:400px;">
     <form class="form-group" action="" method="post">
         <label>User Name</label>
-        <input type="text" name="username" class="form-control">
+        <input type="text" name="username" class="form-control" value="<?php echo $_GET["username"];?>">
+        <br>
+        <label>Email</label>
+        <input type="email" name="email" class="form-control" value="<?php echo $_GET["email"];?>">
         <br>
         <label>パスワード</label>
         <input type="password" name="password" class="form-control">
         <br>
-        <!-- <label>パスワード確認</label>
-        <input type="password" name="password" class="form-control">
-        <br> -->
         <div>
-        <input class="btn btn-secondary" type="submit" value="登録">
+        <p>新規登録用のメールを送信します。送信ボタンを押して、メールをご確認ください。</p>
+        <input class="btn btn-secondary" type="submit" value="送信">
         </div>
     </form>
 

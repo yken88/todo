@@ -1,6 +1,7 @@
 <?php
 class UserValidation
 {
+    const EMAIL_PATTERN = "/^([a-zA-Z0-9])+([a-zA-Z0-9._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9._-]+)+$/";
     private $data = array();
     private $error_msgs = array();
 
@@ -9,8 +10,6 @@ class UserValidation
         $this->data = $data;
     }
 
-
-   
     public function getErrorMessages(){
         return $this->error_msgs;
     }
@@ -25,6 +24,17 @@ class UserValidation
         if (empty($this->data["password"])) {
             $this->error_msgs[] = "パスワードは必須です。";
 
+            return false;
+        }
+
+        if(empty($this->data["email"])){
+            $this->error_msgs[] = "メールアドレスは必須です。";
+            return false;
+        }
+
+        // メールアドレス形式チェック
+        if(preg_match(self::EMAIL_PATTERN, $data["email"]) === 1){
+            $this->error_msgs[] = "メールアドレスを正しい形式で入力してください。";
             return false;
         }
 
