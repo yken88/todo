@@ -5,11 +5,16 @@ require_once './../../validation/UserValidation.php';
 
 class UserController
 {
-    // sessionにuserデータがない場合、login画面にredirect
-    // public function __construct(){
-    //     BaseController::redirectToLogin();
-    // }
-    
+    // 本登録用のURLを記載したメールを送信
+    public static function sendEmailForRegister($email){
+        //token生成
+        $token = uniqid();
+        $url = sprintf('http://localhost:8000/view/auth/main_register.php?username=%s&email=%s&token=%s', $_POST['username'], $_POST["email"], $token);
+
+        mail($email, '登録確認メール', $url);
+        return $token;
+    }
+
     public function login()
     {
         $data = array(
@@ -44,12 +49,15 @@ class UserController
 
     public function register()
     {
+        // メールアドレス登録
         $username = $_POST["username"];
+        $email = $_POST["email"];
         $password = $_POST["password"];
 
         $data = array(
             "username" => $username,
-            "password" => $password
+            "password" => $password,
+            "email" => $email
         );
 
     
@@ -63,22 +71,44 @@ class UserController
             return;
         }
 
-        $result = User::checkUsernameExists($username);
-
+        $result = User::checkEmailExists($email);
+        var_dump($result);
         if ($result === false) {
             session_start();
-            $_SESSION["error_msgs"] = $validation->getErrorMessages();
+            $_SESSION["error_msgs"][] = "メールアドレスはすでに存在します。";
             return;
         }
 
+        // token発行
+        $token = self::sendEmailForRegister($email);
+
         $user = new User($username, $password);
+        $user->setEmail($email);
+        $user->setToken($token);
+        $user->register();
+    }
 
-        $user_id = $user->register();
+    // ここおかしい。修正する。
+    public function mainRegister(){
+        $usename = $_GET["username"];
+        $email = $_GET["email"];
 
+        $result = User::mainRegister($_GET["token"]);
+        if($result === false){
+            session_start();
+            $_SESSION['error_msgs'][] = "登録できていません。";
+
+            return header(sprintf("Location: ../auth/register.php?username=%s&email=%s", $username, $email));
+        }
+
+        // ユーザIDを取得したい。
+        $user = new User($username, $password);
+        $user_id = $user->getUserId();
+
+        // session にユーザidを渡して、todo一覧へ遷移
         session_start();
         $_SESSION["user_id"] = $user_id;
-
-        header("Location: ../todo/index.php");
+        header('Location: ../todo/index.php');
     }
 
     public static function logout(){

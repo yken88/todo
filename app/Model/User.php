@@ -3,8 +3,14 @@ require_once './../../config/db.php';
 
 class User
 {
+    // ユーザの登録状態
+    const UNREGISTERED = 0;
+    const REGISTERED = 1;
+
     private $user_id;
     private $username;
+    private $email;
+    private $token;
     private $password;
     private $error_msgs = [];
 
@@ -13,6 +19,13 @@ class User
         $this->password = $password;
     }
 
+    public function setEmail($email){
+        $this->email = $email;
+    }
+
+    public function setToken($token){
+        $this->token = $token;
+    }
     public function getErrorMessages(){
         return $this->error_msgs;
     }
@@ -33,55 +46,76 @@ class User
     }
 
 
-    // ユーザのがログインできるのであれば、そのユーザの$user_idをsetする。
+    // ユーザがログインできるのであれば、そのユーザの$user_idをsetする。
     public function login()
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
+        $query = sprintf("SELECT `id`, `register_status` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
         $stmh = $pdo->query($query);
 
         if ($stmh) {
-            $user_id = $stmh->fetch(PDO::FETCH_ASSOC);
+            $user = $stmh->fetch(PDO::FETCH_ASSOC);
         } else {
             $user = array();
         }
 
-        if ($user_id === false) {
+        if ($user === false) {
             $this->error_msgs[] = "ユーザが存在しません";
             return false;
         }
 
-        $this->user_id = $user_id;
+        // 仮登録のみのユーザはログインできない。
+        if($user['register_status'] === self::UNREGISTERED){
+            $this->error_msgs[] = "本登録が完了していません。";
+            return false;
+        }
+
+        $this->user_id = $user["user_id"];
     }
 
     //新規ユーザ登録。ユーザの情報を登録し、新しくできた$user_idを返す。
     public function register()
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("INSERT INTO `users` (`username`, `password`) VALUES ('%s', '%s')", $this->username, $this->password);
+        $query = sprintf("INSERT INTO `users` (`username`, `email`, `password`, `token`, `register_status`) VALUES ('%s', '%s', '%s', '%s', %d);", 
+            $this->username, 
+            $this->email, 
+            $this->password, 
+            $this->token, 
+            self::UNREGISTERED
+        );
+
+        $stmh = $pdo->query($query);
+    }
+ 
+    // 本登録 register_status を更新する。
+    public static function mainRegister($token){
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        $query = sprintf("UPDATE users SET `register_status` = %d WHERE `token` = '%s'", self::REGISTERED, $token);
         $stmh = $pdo->query($query);
 
-        // 保存されたユーザのidを返す。
-        $user_id = $pdo->LastInsertId();
+        if($stmh === false){
+            return false;
+        }
 
-        return $user_id;
+        return true;
     }
 
-    // ユーザネームが存在すれば、falseを返す。
-    public static function checkUsernameExists($username)
+    // メールアドレスが存在すれば、falseを返す。
+    public static function checkEmailExists($email)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s';", $username);
+        $query = sprintf("SELECT `id` FROM `users` WHERE `email` = '%s';", $email);
         $stmh = $pdo->query($query);
 
         $user = $stmh->fetch(PDO::FETCH_ASSOC);
 
         //存在すればfalse
-        if ($user) {
+        if ($user !== false) {
             return false;
-        } else {
-            return true;
-        }
+        } 
+        
+        return true;
     }
 
     //ユーザ情報が欲しい時。
