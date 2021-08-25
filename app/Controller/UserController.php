@@ -93,18 +93,14 @@ class UserController
         $usename = $_GET["username"];
         $email = $_GET["email"];
 
-        $result = User::mainRegister($_GET["token"]);
-        if($result === false){
+        $user_id = User::mainRegister($_GET["token"]);
+        if($user_id === false){
             session_start();
             $_SESSION['error_msgs'][] = "登録できていません。";
 
             return header(sprintf("Location: ../auth/register.php?username=%s&email=%s", $username, $email));
         }
-
-        // ユーザIDを取得したい。
-        $user = new User($username, $password);
-        $user_id = $user->getUserId();
-
+;
         // session にユーザidを渡して、todo一覧へ遷移
         session_start();
         $_SESSION["user_id"] = $user_id;
