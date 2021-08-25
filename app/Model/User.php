@@ -87,8 +87,18 @@ class User
 
         $stmh = $pdo->query($query);
     }
+
+    // tokenからuser_idを取得。
+    public static function findByToken($token){
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        $query = sprintf("SELECT `id` FROM `users` WHERE `token` = '%s';", $token);
+        $stmh = $pdo->query($query);
+
+        $user_id = $stmh->fetch(PDO::FETCH_ASSOC);
+        return $user_id;
+    }
  
-    // 本登録 register_status を更新する。
+    // 本登録 トークンが一致するuserのregister_status を更新する。
     public static function mainRegister($token){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
         $query = sprintf("UPDATE users SET `register_status` = %d WHERE `token` = '%s'", self::REGISTERED, $token);
@@ -98,7 +108,9 @@ class User
             return false;
         }
 
-        return true;
+        $user_id = self::findByToken($token);
+       
+        return $user_id;
     }
 
     // メールアドレスが存在すれば、falseを返す。
