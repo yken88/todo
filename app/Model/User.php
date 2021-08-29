@@ -73,19 +73,30 @@ class User
         $this->user_id = $user["user_id"];
     }
 
-    //新規ユーザ登録。ユーザの情報を登録し、新しくできた$user_idを返す。
     public function register()
     {
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("INSERT INTO `users` (`username`, `email`, `password`, `token`, `register_status`) VALUES ('%s', '%s', '%s', '%s', %d);", 
-            $this->username, 
-            $this->email, 
-            $this->password, 
-            $this->token, 
-            self::UNREGISTERED
-        );
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
-        $stmh = $pdo->query($query);
+            $query = sprintf("INSERT INTO `users` (`username`, `email`, `password`, `token`, `register_status`) VALUES ('%s', '%s', '%s', '%s', %d);", 
+                $this->username, 
+                $this->email, 
+                $this->password, 
+                $this->token, 
+                self::UNREGISTERED
+                );
+            $stmh = $pdo->query($query);
+
+        }catch(PDOException $e){
+            error_log("仮登録に失敗しました");
+            error_log($e->getMessage());
+            // スタックトレイスを残す方法
+            error_log($e->getTraceAsString());
+            return false;
+        }
+            
+
     }
 
     // tokenからuser_idを取得。
@@ -100,11 +111,28 @@ class User
  
     // 本登録 トークンが一致するuserのregister_status を更新する。
     public static function mainRegister($token){
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("UPDATE users SET `register_status` = %d WHERE `token` = '%s'", self::REGISTERED, $token);
-        $stmh = $pdo->query($query);
 
-        if($stmh === false){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $query = sprintf("UPDATE users SET `register_status` = %d WHERE `token` = '%s'", self::REGISTERED, $token);
+            $stmh = $pdo->query($query);
+
+            if($stmh === false){
+                return false;
+            }
+
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            error_log("本登録に失敗しました");
+            error_log($e->getMessage());
+            // スタックトレイスを残す方法
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
             return false;
         }
 
@@ -117,15 +145,15 @@ class User
     public static function checkEmailExists($email)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `email` = '%s';", $email);
+        $query = sprintf("SELECT EXISTS (SELECT * FROM `users` WHERE `email` = '%s') AS `user_exists`;", $email);
         $stmh = $pdo->query($query);
 
-        $user = $stmh->fetch(PDO::FETCH_ASSOC);
+        $user_exists = $stmh->fetch(PDO::FETCH_ASSOC);
 
         //存在すればfalse
-        if ($user !== false) {
+        if ($user_exists["user_exists"] === "1") {
             return false;
-        } 
+        }
         
         return true;
     }
