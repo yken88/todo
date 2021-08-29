@@ -1,20 +1,11 @@
 <?php
 require_once './../../controller/BaseController.php';
 require_once './../../Model/User.php';
+require_once './../../Services/UserRegisterService.php';
 require_once './../../validation/UserValidation.php';
 
 class UserController
 {
-    // 本登録用のURLを記載したメールを送信
-    public static function sendEmailForRegister($email){
-        //token生成
-        $token = uniqid();
-        $url = sprintf('http://localhost:8000/view/auth/main_register.php?username=%s&email=%s&token=%s', $_POST['username'], $_POST["email"], $token);
-
-        mail($email, '登録確認メール', $url);
-        return $token;
-    }
-
     public function login()
     {
         $data = array(
@@ -49,18 +40,12 @@ class UserController
 
     public function register()
     {
-        // メールアドレス登録
-        $username = $_POST["username"];
-        $email = $_POST["email"];
-        $password = $_POST["password"];
-
         $data = array(
-            "username" => $username,
-            "password" => $password,
-            "email" => $email
+            "username" => $_POST["username"],
+            "password" => $_POST["password"],
+            "email" => $_POST["email"]
         );
 
-    
         $validation = new UserValidation;
         $validation->setData($data);
         $result = $validation->check();
@@ -71,8 +56,8 @@ class UserController
             return;
         }
 
-        $result = User::checkEmailExists($email);
-        var_dump($result);
+        $result = User::checkEmailExists($_POST["email"]);
+
         if ($result === false) {
             session_start();
             $_SESSION["error_msgs"][] = "メールアドレスはすでに存在します。";
@@ -80,15 +65,21 @@ class UserController
         }
 
         // token発行
-        $token = self::sendEmailForRegister($email);
+        $token = UserRegisterService::publishToken();
 
-        $user = new User($username, $password);
-        $user->setEmail($email);
+        $user = new User($_POST["password"], $_POST["password"]);
+        $user->setEmail($_POST["email"]);
         $user->setToken($token);
-        $user->register();
+        $result = $user->register();
+
+        if($result === false){
+            session_start();
+            $_SESSION["error_msgs"] = "仮登録に失敗しました。";
+
+            return header(sprintf("Location: ../auth/register.php?username=%s&email=%s", $username, $email));
+        }
     }
 
-    // ここおかしい。修正する。
     public function mainRegister(){
         $usename = $_GET["username"];
         $email = $_GET["email"];
