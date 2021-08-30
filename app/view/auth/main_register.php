@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     <title>本登録</title>
 </head>
 <body>
-    <p>User Name: <?php echo $_GET["username"];?></p>
+    <p>User Name: <?php echo $_GET["user_name"];?></p>
     <p>Email: <?php echo $_GET["email"];?></p>
 
     <form action="" method="post">

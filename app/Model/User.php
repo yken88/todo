@@ -8,14 +8,15 @@ class User
     const REGISTERED = 1;
 
     private $user_id;
-    private $username;
+    private $user_name;
     private $email;
-    private $token;
     private $password;
+
+    private $token;
     private $error_msgs = [];
 
-    public function __construct($username, $password){
-        $this->username = $username;
+    public function __construct($user_name, $password){
+        $this->user_name = $user_name;
         $this->password = $password;
     }
 
@@ -26,6 +27,7 @@ class User
     public function setToken($token){
         $this->token = $token;
     }
+
     public function getErrorMessages(){
         return $this->error_msgs;
     }
@@ -33,10 +35,10 @@ class User
     public function setUserId()
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
+        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->user_name, $this->password);
         $stmh = $pdo->query($query);
 
-        $user_id = $stmh->fetch();
+        $user_id = $stmh->fetch(PDO::FETCH_ASSOC);
 
         $this->user_id = $user_id["id"];
     }
@@ -50,7 +52,7 @@ class User
     public function login()
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id`, `register_status` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->username, $this->password);
+        $query = sprintf("SELECT `id`, `register_status` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->user_name, $this->password);
         $stmh = $pdo->query($query);
 
         if ($stmh) {
@@ -80,7 +82,7 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
             $query = sprintf("INSERT INTO `users` (`username`, `email`, `password`, `token`, `register_status`) VALUES ('%s', '%s', '%s', '%s', %d);", 
-                $this->username, 
+                $this->user_name, 
                 $this->email, 
                 $this->password, 
                 $this->token, 
@@ -141,6 +143,33 @@ class User
         return $user_id;
     }
 
+    public function update($user_id){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $query = sprintf("UPDATE `users` SET `username` = '%s', `email` = '%s',`password` =  '%s' WHERE id = '%s'",
+                $this->user_name,
+                $this->email,
+                $this->password,
+                $user_id
+            );
+            $stmh = $pdo->query($query);
+
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            error_log("本登録に失敗しました");
+            echo $e->getMessage();
+            // スタックトレイスを残す方法
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
+    }
+
     // メールアドレスが存在すれば、falseを返す。
     public static function checkEmailExists($email)
     {
@@ -161,13 +190,20 @@ class User
     //ユーザ情報が欲しい時。
     public function getUserById($user_id)
     {
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT * FROM `users` WHERE `id` = '%s'", $user_id);
-        $stmh = $pdo->query($query);
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
-        $user = $stmh->fetch(PDO::FETCH_ASSOC);
+            $query = sprintf("SELECT * FROM `users` WHERE `id` = '%d'", $user_id);
+            $stmh = $pdo->query($query);
 
-        return $user;
+            $user = $stmh->fetch(PDO::FETCH_ASSOC);
+
+            return $user;
+        }catch(PDOException $e){
+            echo $e->getMessage() . PHP_EOL;
+        }
+        
     }
 
     

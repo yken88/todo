@@ -10,13 +10,17 @@ class UserValidation
         $this->data = $data;
     }
 
+    public function getData(){
+        return $this->data;
+    }
+
     public function getErrorMessages(){
         return $this->error_msgs;
     }
 
     public function check()
     {
-        if (empty($this->data["username"])) {
+        if (empty($this->data["user_name"])) {
             $this->error_msgs[] = "ユーザネームは必須です。";
             return false;
         }

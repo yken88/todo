@@ -2,9 +2,14 @@
 session_start();
 require_once './../../controller/UserController.php';
 
+if ($_SERVER["REQUEST_METHOD"] === 'GET') {
+    $user_controller = new UserController;
+    $user = $user_controller->edit();
+}
+
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     $user_controller = new UserController;
-    $user_controller->register();
+    $user_controller->update();
 }
 
 $error_msgs = $_SESSION["error_msgs"];
@@ -13,24 +18,24 @@ unset($_SESSION["error_msgs"]);
 
 <?php require_once("../layouts/header.php"); ?>
 
-    <title>新規ユーザ登録</title>
+    <title>ユーザ編集画面</title>
 </head>
 <body class="text-center">
-<h1>新規ユーザ登録</h1>
+<h1>ユーザ編集画面</h1>
 <div class="mx-auto" style="width:400px;">
     <form class="form-group" action="" method="post">
         <label>User Name</label>
-        <input type="text" name="user_name" class="form-control" value="<?php echo $_GET["user_name"];?>">
+        <input type="text" name="user_name" class="form-control" value="<?php echo $user["username"];?>">
         <br>
         <label>Email</label>
-        <input type="email" name="email" class="form-control" value="<?php echo $_GET["email"];?>">
+        <input type="email" name="email" class="form-control" value="<?php echo $user["email"];?>">
         <br>
         <label>パスワード</label>
-        <input type="password" name="password" class="form-control">
+        <input type="password" name="password" class="form-control" value="<?php echo $user["password"];?>">
         <br>
         <div>
-        <p>新規登録用のメールを送信します。送信ボタンを押して、メールをご確認ください。</p>
-        <input class="btn btn-secondary" type="submit" value="送信">
+        <p>メールアドレスを変更する場合はメールを送信します。編集ボタンを押して、メールをご確認ください。</p>
+        <input class="btn btn-secondary" type="submit" value="更新">
         </div>
     </form>
 

@@ -7,12 +7,12 @@ require_once './../../controller/TodoController.php';
 
 $controller = new TodoController;
 $max_page = $controller->getMaxPage();
-// logout処理をUserControllerに記述
+
+
 if($_GET["logout"]){
     UserController::logout();
 }
 
-// GETで一覧
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $todo_list = $controller->index();
 }
@@ -25,6 +25,8 @@ unset($_SESSION['error_msgs']);
 
 </head>
 <body class="text-center">
+    <!-- 編集画面のURLにuser_idを付与 -->
+    <a href="../auth/edit.php?user_id=<?php echo $_SESSION["user_id"];?>">ユーザ編集</a>
 <form action="" method="get">
     <input type="submit" name="logout" value="logout">
 </form>
