@@ -20,7 +20,10 @@ unset($_SESSION["error_msgs"]);
 <div class="mx-auto" style="width:400px;">
     <form class="form-group" action="" method="post">
         <label>User Name</label>
-        <input type="text" name="username" class="form-control">
+        <input type="text" name="user_name" class="form-control">
+        <br>
+        <label>Email</label>
+        <input type="email" name="email" class="form-control">
         <br>
         <label>パスワード</label>
         <input type="password" name="password" class="form-control">
