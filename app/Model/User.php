@@ -9,14 +9,19 @@ class User
 
     private $user_id;
     private $user_name;
-    private $email;
     private $password;
 
-    private $token;
+    protected $email;
+    protected $token;
+
     private $error_msgs = [];
 
-    public function __construct($user_name, $password){
+
+    public function setUsername($user_name){
         $this->user_name = $user_name;
+    }
+
+    public function setPassword($password){
         $this->password = $password;
     }
 
@@ -46,7 +51,6 @@ class User
     public function getUserId(){
         return $this->user_id;
     }
-
 
     // ユーザがログインできるのであれば、そのユーザの$user_idをsetする。
     public function login()
@@ -149,9 +153,8 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
 
-            $query = sprintf("UPDATE `users` SET `username` = '%s', `email` = '%s',`password` =  '%s' WHERE id = '%s'",
+            $query = sprintf("UPDATE `users` SET `username` = '%s', `password` = '%s' WHERE id = '%s'",
                 $this->user_name,
-                $this->email,
                 $this->password,
                 $user_id
             );
@@ -160,9 +163,31 @@ class User
             $pdo->commit();
 
         }catch(PDOException $e){
-            error_log("本登録に失敗しました");
-            echo $e->getMessage();
-            // スタックトレイスを残す方法
+            error_log("ユーザー更新に失敗しました");
+            error_log($e->getMessage()); 
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
+    }
+
+    public function updateEmail($user_id){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $query = sprintf("UPDATE `users` SET `email` = '%s' WHERE `id` = '%s';",
+                $this->email,
+                $user_id
+            );
+            $stmh = $pdo->query($query);
+
+            $pdo->commit();
+        }catch(PDOException $e){
+            error_log("更新に失敗しました");
+            error_log($e->getMessage()); 
             error_log($e->getTraceAsString());
 
             $pdo->rollback();
@@ -187,8 +212,8 @@ class User
         return true;
     }
 
-    //ユーザ情報が欲しい時。
-    public function getUserById($user_id)
+
+    public static function getUserById($user_id)
     {
         try{
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
