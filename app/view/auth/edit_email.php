@@ -31,7 +31,7 @@ unset($_SESSION["error_msgs"]);
 
         <div>
             <p>新しいメールアドレスにメールアドレス変更用のURLを送信します</p>
-            <input class="btn btn-secondary" type="submit" value="更新">
+            <input class="btn btn-secondary" type="submit" value="メールを送信">
         </div>
     </form>
 

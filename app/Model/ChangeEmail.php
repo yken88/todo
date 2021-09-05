@@ -15,10 +15,9 @@ class ChangeEmail extends User{
             $stmh = $pdo->query($query);
 
         }catch(PDOException $e){
-            echo $e->getMessage();
-            // error_log("仮登録に失敗しました");
-            // error_log($e->getMessage());
-            // error_log($e->getTraceAsString());
+            error_log("仮登録に失敗しました");
+            error_log($e->getMessage());
+            error_log($e->getTraceAsString());
             return false;
         }
     }

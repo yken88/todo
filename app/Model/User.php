@@ -29,6 +29,9 @@ class User
         $this->email = $email;
     }
 
+    public function getEmail(){
+        return $email;
+    }
     public function setToken($token){
         $this->token = $token;
     }
@@ -181,9 +184,9 @@ class User
                 $this->email,
                 $user_id
             );
-            $stmh = $pdo->query($query);
-
+            $pdo->query($query);
             $pdo->commit();
+
         }catch(PDOException $e){
             error_log("更新に失敗しました");
             error_log($e->getMessage()); 
