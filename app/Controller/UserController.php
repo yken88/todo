@@ -29,7 +29,7 @@ class UserController
 
         $user = new User;
         $user->setUsername($valid_data["user_name"]);
-        $user->setUsername($valid_data["password"]);
+        $user->setPassword($valid_data["password"]);
         $result = $user->login();
 
         $user->setUserId();
@@ -50,6 +50,7 @@ class UserController
         $data = array(
             "user_name" => $_POST["user_name"],
             "password" => $_POST["password"],
+            "password_confirm" => $_POST["password_confirm"],
             "email" => $_POST["email"]
         );
 
@@ -110,7 +111,7 @@ class UserController
 
 // 編集画面
     public function edit(){
-        $user = User::getUserById($_GET["user_id"]);
+        $user = User::getUserById($_SESSION["user_id"]);
 
         return $user;
     }
@@ -120,6 +121,7 @@ class UserController
         $data = array(
             "user_name" => $_POST["user_name"],
             "password" => $_POST["password"],
+            "password_confirm" => $_POST["password_confirm"]
         );
         
         // バリデーション
@@ -129,14 +131,17 @@ class UserController
 
         if($result === false){
             session_start();
-            $_SESSION["error_msgs"][] = $validation->getErrorMessages();
+            $_SESSION["error_msgs"] = $validation->getErrorMessages();
             return;
         }
 
         $valid_data = $validation->getData();
 
-        $user = new User($valid_data["user_name"], $valid_data["password"]);
+        $user = new User();
+        $user->setUsername($valid_data["user_name"]);
+        $user->setPassword($valid_data["password"]);
         $result = $user->update($_GET["user_id"]);
+
         if($result === false){
             session_start();
             $_SESSION["error_msgs"][] = "ユーザ情報の更新に失敗しました。";

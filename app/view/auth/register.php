@@ -28,6 +28,9 @@ unset($_SESSION["error_msgs"]);
         <label>パスワード</label>
         <input type="password" name="password" class="form-control">
         <br>
+        <label>確認パスワード</label>
+        <input type="password" name="password_confirm" class="form-control">
+        <br>
         <div>
         <p>新規登録用のメールを送信します。送信ボタンを押して、メールをご確認ください。</p>
         <input class="btn btn-secondary" type="submit" value="送信">
