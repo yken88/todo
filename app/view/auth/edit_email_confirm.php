@@ -1,6 +1,6 @@
 <?php
 require_once './../../controller/UserController.php';
-
+session_start();
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     $controller = new UserController;
     $controller->updateEmail();

@@ -140,7 +140,7 @@ class UserController
         $user = new User();
         $user->setUsername($valid_data["user_name"]);
         $user->setPassword($valid_data["password"]);
-        $result = $user->update($_GET["user_id"]);
+        $result = $user->update($_SESSION["user_id"]);
 
         if($result === false){
             session_start();
@@ -172,35 +172,36 @@ class UserController
 
         $change_email = new ChangeEmail;
         $change_email->setEmail($valid_email);
+
         // メール送信
-        $token = UserUpdateService::publishToken();
+        $token = UserUpdateService::publishToken($valid_email);
         $change_email->setToken($token);
+
         // 仮登録用のデータベースに登録
-        $result = $change_email->insertEmail($_GET["user_id"]);
+        $result = $change_email->insertEmail($_SESSION["user_id"]);
         if($result === false){
             session_start();
             $_SESSION["error_msgs"][] = "エラーが発生しました。";
-            return header(sprintf("Location: ../auth/edit_email.php?user_id=%s", $_GET["user_id"]));
+            return header(sprintf("Location: ../auth/edit_email.php?user_id=%s", $_SESSION["user_id"]));
         }
     }
 
     public function updateEmail(){
-        $email = ChangeEmail::getEmailByUserId($_GET["user_id"]);
+        $email = ChangeEmail::getEmailByUserId($_SESSION["user_id"]);
 
         $user = new User;
         $user->setEmail($email["email"]);
-        $result = $user->updateEmail($_GET["user_id"]);
+        $result = $user->updateEmail($_SESSION["user_id"]);
 
         if($result === false){
             session_start();
             $_SESSION["error_msgs"] = "更新に失敗しました。";
-            return header(sprintf("Location: ../auth/edit_email.php?user_id=%s", $_GET["user_id"]));
+            return header(sprintf("Location: ../auth/edit_email.php?user_id=%s", $_SESSION["user_id"]));
         }
 
         // 仮登録のテーブルから削除
-        ChangeEmail::deleteEmail($_GET["user_id"]);
+        ChangeEmail::deleteEmail($_SESSION["user_id"]);
         return header("Location: ../todo/index.php");
-        
     }
 
 

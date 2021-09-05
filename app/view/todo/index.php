@@ -26,7 +26,7 @@ unset($_SESSION['error_msgs']);
 </head>
 <body class="text-center">
     <!-- 編集画面のURLにuser_idを付与 -->
-    <a href="../auth/edit.php?user_id=<?php echo $_SESSION["user_id"];?>">ユーザ編集</a>
+    <a href="../auth/edit.php">ユーザ編集</a>
 <form action="" method="get">
     <input type="submit" name="logout" value="logout">
 </form>
