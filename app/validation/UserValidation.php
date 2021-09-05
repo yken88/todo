@@ -2,6 +2,7 @@
 class UserValidation
 {
     const EMAIL_PATTERN = "/^([a-zA-Z0-9])+([a-zA-Z0-9._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9._-]+)+$/";
+
     private $data = array();
     private $email;
     private $error_msgs = array();
@@ -36,9 +37,17 @@ class UserValidation
 
         if (empty($this->data["password"])) {
             $this->error_msgs[] = "パスワードは必須です。";
-
             return false;
         }
+
+        // password_confirmに値が入っていれば、確認を行う。
+        if(!empty($this->data["password_confirm"])){
+            if($this->data["password"] !== $this->data["password_confirm"]){
+                $this->error_msgs[] = "確認パスワードと一致しません。";
+                return false;
+            }    
+        }
+        
         return true;
     }
 
@@ -56,5 +65,5 @@ class UserValidation
         }
 
         return true;
-    }   
+    }
 }

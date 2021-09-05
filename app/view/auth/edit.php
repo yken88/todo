@@ -25,12 +25,16 @@ unset($_SESSION["error_msgs"]);
 <a href="edit_email.php?user_id=<?php echo $_SESSION["user_id"]; ?>">メールアドレスの変更はこちら</a>
 <div class="mx-auto" style="width:400px;">
     <form class="form-group" action="" method="post">
-        <label>User Name</label>
+        <label>ユーザーネーム</label>
         <input type="text" name="user_name" class="form-control" value="<?php echo $user["username"];?>">
         <br>
 
         <label>パスワード</label>
         <input type="password" name="password" class="form-control" value="<?php echo $user["password"];?>">
+        <br>
+
+        <label>確認パスワード</label>
+        <input type="password" name="password_confirm" class="form-control" value="">
         <br>
         <input class="btn btn-secondary" type="submit" value="更新">
     </form>
