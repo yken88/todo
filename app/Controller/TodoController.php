@@ -118,8 +118,7 @@ class TodoController extends BaseController
             $_SESSION['error_msgs'] = $error_msgs;
 
             $params = sprintf("?title=%s&detail=%s", $_POST['title'], $_POST['detail']);
-            header(sprintf("Location: ./new.php%s", $params));
-            return;
+            return header(sprintf("Location: ./new.php%s", $params));
         }
 
         $valid_data = $validation->getData();

@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once './../../controller/UserController.php';
+require_once './../../controller/LoginController.php';
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
-    $user_controller = new UserController;
-    $user_controller->register();
+    $controller = new LoginController;
+    $controller->register();
 }
 
 $error_msgs = $_SESSION["error_msgs"];

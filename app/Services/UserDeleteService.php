@@ -1,8 +1,8 @@
 <?php
-class UserUpdateService {
+class UserDeleteService {
     // 本登録用のURLを記載したメールを送信
     private static function sendEmailForUpdateEmail($email, $token){
-        $url = sprintf('http://localhost:8000/view/user/edit_email_confirm.php?token=%s', $token);
+        $url = sprintf('http://localhost:8000/view/user/delete_confirm.php?token=%s', $token);
 
         mail($email, '登録確認メール', $url);
     }

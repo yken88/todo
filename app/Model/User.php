@@ -228,9 +228,36 @@ class User
 
             return $user;
         }catch(PDOException $e){
-            echo $e->getMessage() . PHP_EOL;
+            error_log("ユーザの取得に失敗しました");
+            error_log($e->getMessage()); 
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
         }
         
+    }
+
+    public function destroy($user_id){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $query = sprintf("DELETE FROM `users` WHERE `id` = '%s';",
+                $user_id
+            );
+            $pdo->query($query);
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            error_log("更新に失敗しました");
+            error_log($e->getMessage()); 
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
     }
 
     

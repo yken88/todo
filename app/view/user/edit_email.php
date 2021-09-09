@@ -16,7 +16,6 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
 $error_msgs = $_SESSION["error_msgs"];
 unset($_SESSION["error_msgs"]);
 ?>
-
 <?php require_once("../layouts/header.php"); ?>
 
     <title>ユーザ編集画面</title>

@@ -1,8 +1,8 @@
 <?php
-require_once './../../controller/UserController.php';
+require_once './../../controller/LoginController.php';
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
-    $controller = new UserController;
+    $controller = new LoginController;
     $controller->mainRegister();
 }
 
