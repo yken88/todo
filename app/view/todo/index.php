@@ -25,6 +25,8 @@ unset($_SESSION['error_msgs']);
 </head>
 <body class="text-center">
     <a href="../user/edit.php">ユーザ編集</a>
+    <br>
+    <a href="../user/delete.php">退会</a>
 <form action="" method="get">
     <input type="submit" name="logout" value="logout">
 </form>

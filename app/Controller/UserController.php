@@ -158,7 +158,7 @@ class UserController extends BaseController
         if($result === false){
             session_start();
 
-            $_SESSION["error_msgs"] = 退会に失敗しました。;
+            $_SESSION["error_msgs"] = "退会に失敗しました。";
             return header("Location: ../user/delete.php");
         }
 
