@@ -291,7 +291,7 @@ class User
             $pdo->rollback();
             return false;
         }
-    }    
+    }
 
     public function updateToken(){
         try{
