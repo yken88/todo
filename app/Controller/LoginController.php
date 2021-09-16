@@ -168,6 +168,6 @@ class LoginController
             return;
         }
 
-        return header("Location: ../todo/index.php");
+        return header("Location: ../auth/login.php");
     }
 }

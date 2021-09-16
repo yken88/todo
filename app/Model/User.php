@@ -295,7 +295,6 @@ class User
 
     public function updateToken(){
         try{
-            var_dump($this->email);
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
