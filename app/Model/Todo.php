@@ -265,6 +265,27 @@ class Todo
         return $result;
     }
 
+    public static function deleteAll($user_id){
+        try {
+            $query = sprintf("DELETE FROM `todos` WHERE `user_id` = %s",
+                $user_id
+            );
+
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+
+            $result = $pdo->query($query);
+
+        } catch (Exception $e) {
+            error_log("削除に失敗しました。");
+            error_log($e->getMessage());
+            error_log($e->getTraceAsString());
+
+            return false;
+        }
+
+        return $result;
+    }
+
     // ページの上限
     public static function getMaxPage(){
         $user_id = $_SESSION["user_id"];

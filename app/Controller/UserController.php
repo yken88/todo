@@ -1,6 +1,7 @@
 <?php
 require_once './../../controller/BaseController.php';
 require_once './../../Model/User.php';
+require_once './../../Model/Todo.php';
 require_once './../../Model/ChangeEmail.php';
 require_once './../../Services/UserUpdateService.php';
 require_once './../../Services/UserDeleteService.php';
@@ -163,6 +164,8 @@ class UserController extends BaseController
             return header("Location: ../user/delete.php");
         }
 
+        // 退会するユーザーのtodoを削除
+        Todo::deleteAll($_SESSION["user_id"]);
         session_destroy();
         // ログイン画面へ
         return header("Location: ../auth/login.php");
