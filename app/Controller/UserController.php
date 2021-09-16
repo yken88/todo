@@ -64,9 +64,10 @@ class UserController extends BaseController
         }
 
         $valid_email = $validation->getEmail();
-        $email_exists = User::checkEmailExists($valid_email);
+        $user = new User;
+        $email_exists = $user->checkEmailExists($valid_email);
         if($email_exists === false){
-            $_SESSION["error_msgs"][] = "メールアドレスはすでに使われています";
+            $_SESSION["error_msgs"][] = $user->getErrorMessages();
             return;
         }
 
@@ -81,7 +82,7 @@ class UserController extends BaseController
         $result = $change_email->insertEmail($_SESSION["user_id"]);
         if($result === false){
             session_start();
-            $_SESSION["error_msgs"][] = "エラーが発生しました。";
+            $_SESSION["error_msgs"][] = $this->getErrorMessages();
             return header(sprintf("Location: ../auth/edit_email.php?user_id=%s", $_SESSION["user_id"]));
         }
     }
@@ -162,8 +163,9 @@ class UserController extends BaseController
             return header("Location: ../user/delete.php");
         }
 
-        // 新規登録画面へ
-        return header("Location: ../auth/register.php");
+        session_destroy();
+        // ログイン画面へ
+        return header("Location: ../auth/login.php");
     }
 
 }

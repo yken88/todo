@@ -7,6 +7,8 @@ class User
     const UNREGISTERED = 0;
     const REGISTERED = 1;
 
+    const DEFAULT_DELETED_AT = NULL;
+
     private $user_id;
     private $user_name;
     private $password;
@@ -79,6 +81,12 @@ class User
             return false;
         }
 
+        // 退会チェック
+        if($user["deleted_at"] !== null){
+            $this->error_msgs[] = "このアカウントは退会されています。";
+            return false;
+        }
+
         $this->user_id = $user["user_id"];
     }
 
@@ -104,8 +112,30 @@ class User
             error_log($e->getTraceAsString());
             return false;
         }
-            
+    }
 
+    // 再登録
+    public function reRegister($token){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $sth = $pdo->prepare("UPDATE `users` SET `deleted_at` = ? WHERE `token` = ?");
+            $sth->bindValue(1, self::DEFAULT_DELETED_AT);
+            $sth->bindValue(2, $token);
+            $sth->execute();
+
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            error_log("ユーザー更新に失敗しました");
+            error_log($e->getMessage()); 
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
     }
 
     // tokenからuser_idを取得。
@@ -148,6 +178,7 @@ class User
         
         return $user["id"];
     }
+
 
     public function update($user_id){
         try{
@@ -198,7 +229,7 @@ class User
     }
 
     // メールアドレスが存在すれば、falseを返す。
-    public static function checkEmailExists($email)
+    public function checkEmailExists($email)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
         $query = sprintf("SELECT EXISTS (SELECT * FROM `users` WHERE `email` = '%s') AS `user_exists`;", $email);
@@ -208,6 +239,7 @@ class User
 
         //存在すればfalse
         if ($user_exists["user_exists"] === "1") {
+            $this->error_msgs[] = "メールアドレスは存在します。再登録するか別のメールアドレスで登録してください。";
             return false;
         }
         
@@ -244,7 +276,8 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
 
-            $query = sprintf("DELETE FROM `users` WHERE `id` = '%s';",
+            // 論理削除
+            $query = sprintf("UPDATE `users` SET `deleted_at` = NOW() WHERE `id` = '%s';",
                 $user_id
             );
             $pdo->query($query);
@@ -258,7 +291,76 @@ class User
             $pdo->rollback();
             return false;
         }
+    }    
+
+    public function updateToken(){
+        try{
+            var_dump($this->email);
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $stmh = $pdo->prepare("UPDATE users SET `token` = ? WHERE `email` = ?;");
+            $stmh->bindValue(1, $this->token);
+            $stmh->bindValue(2, $this->email);
+            $stmh->execute();
+
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            $this->error_msgs[] = "トークンの発行に失敗";
+            echo $e->getMessage();
+            error_log("トークン更新に失敗。");
+            error_log($e->getMessage());
+            // スタックトレイスを残す方法
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
+
     }
 
-    
+// 退会チェック
+    public function isSoftDeleted(){
+        $pdo = new PDO(DSN, USERNAME, PASSWORD);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+
+        $query = sprintf("SELECT `deleted_at` FROM `users` WHERE `email` = '%s'", $this->email);
+        $stmh = $pdo->query($query);
+
+        $deleted_at = $stmh->fetch(PDO::FETCH_ASSOC);
+
+        if(is_null($deleted_at["deleted_at"])){
+            $this->error_msgs[] = "このアカウントは退会していません。";
+            return false;
+        }
+
+        return true;
+    }
+
+    public function updateDeletedAt(){
+        try{
+            $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
+
+            $sth = $pdo->prepare("UPDATE users SET `deleted_at` = ? WHERE `token` = ?");
+            $sth->bindValue(1, self::DEFAULT_DELETED_AT);
+            $sth->bindValue(2, $this->token);
+            $sth->execute();
+
+            $pdo->commit();
+
+        }catch(PDOException $e){
+            $this->error_msgs[] = "復元失敗";
+            error_log("トークン更新に失敗。");
+            error_log($e->getMessage());
+            // スタックトレイスを残す方法
+            error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+            return false;
+        }
+    }
 }
