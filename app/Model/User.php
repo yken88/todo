@@ -42,26 +42,14 @@ class User
         return $this->error_msgs;
     }
 
-    public function setUserId()
-    {
-        $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->user_name, $this->password);
-        $stmh = $pdo->query($query);
-
-        $user_id = $stmh->fetch(PDO::FETCH_ASSOC);
-
-        $this->user_id = $user_id["id"];
-    }
-
     public function getUserId(){
         return $this->user_id;
     }
-
     // ユーザがログインできるのであれば、そのユーザの$user_idをsetする。
     public function login()
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT `id`, `register_status` FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->user_name, $this->password);
+        $query = sprintf("SELECT * FROM `users` WHERE `username` = '%s' AND `password` = '%s';", $this->user_name, $this->password);
         $stmh = $pdo->query($query);
 
         if ($stmh) {
@@ -82,12 +70,12 @@ class User
         }
 
         // 退会チェック
-        if($user["deleted_at"] !== null){
+        if($user["deleted_at"] !== NULL){
             $this->error_msgs[] = "このアカウントは退会されています。";
             return false;
         }
 
-        $this->user_id = $user["user_id"];
+        $this->user_id = $user["id"];
     }
 
     public function register()
@@ -138,11 +126,11 @@ class User
         }
     }
 
-    // tokenからuser_idを取得。
     public static function findByToken($token){
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $query = sprintf("SELECT * FROM `users` WHERE `token` = '%s';", $token);
-        $stmh = $pdo->query($query);
+        $stmh = $pdo->prepare("SELECT * FROM `users` WHERE `token` = ?;");
+        $stmh->bindValue(1, $token);
+        $stmh->execute();
 
         $user = $stmh->fetch(PDO::FETCH_ASSOC);
         return $user;
@@ -155,12 +143,10 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
 
-            $query = sprintf("UPDATE users SET `register_status` = %d WHERE `token` = '%s'", self::REGISTERED, $token);
-            $stmh = $pdo->query($query);
-
-            if($stmh === false){
-                return false;
-            }
+            $stmh = $pdo->prepare("UPDATE users SET `register_status` = ? WHERE `token` =  ?;");
+            $stmh->bindValue(1, self::REGISTERED);
+            $stmh->bindValue(2, $token);
+            $stmh->execute();
 
             $pdo->commit();
 
@@ -173,9 +159,8 @@ class User
             $pdo->rollback();
             return false;
         }
-
+ 
         $user = self::findByToken($token);
-        
         return $user["id"];
     }
 
@@ -186,12 +171,11 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
 
-            $query = sprintf("UPDATE `users` SET `username` = '%s', `password` = '%s' WHERE id = '%s'",
-                $this->user_name,
-                $this->password,
-                $user_id
-            );
-            $stmh = $pdo->query($query);
+            $stmh = $pdo->prepare("UPDATE `users` SET `username` = ?, `password` = ? WHERE id = ?;");
+            $stmh->bindValue(1, $this->user_name);
+            $stmh->bindValue(2, $this->password);
+            $stmh->bindValue(3,$user_id);
+            $stmh->execute();
 
             $pdo->commit();
 
@@ -211,11 +195,10 @@ class User
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
             $pdo->beginTransaction();
 
-            $query = sprintf("UPDATE `users` SET `email` = '%s' WHERE `id` = '%s';",
-                $this->email,
-                $user_id
-            );
-            $pdo->query($query);
+            $stmh = $pdo->prepare("UPDATE `users` SET `email` = ? WHERE `id` = ?;");
+            $stmh->bindValue(1, $this->email);
+            $stmh->bindValue(2, $user_id);
+            $stmh->execute();
             $pdo->commit();
 
         }catch(PDOException $e){
@@ -228,7 +211,6 @@ class User
         }
     }
 
-    // メールアドレスが存在すれば、falseを返す。
     public function checkEmailExists($email)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
@@ -242,7 +224,6 @@ class User
             $this->error_msgs[] = "メールアドレスは存在します。再登録するか別のメールアドレスで登録してください。";
             return false;
         }
-        
         return true;
     }
 
@@ -253,9 +234,11 @@ class User
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
             $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 
-            $query = sprintf("SELECT * FROM `users` WHERE `id` = '%d'", $user_id);
-            $stmh = $pdo->query($query);
-
+            
+            $query = sprintf("SELECT * FROM `users` WHERE `id` = ?");
+            $stmh = $pdo->prepare($query);
+            $stmh->bindValue(1, $user_id);
+            $stmh->execute();
             $user = $stmh->fetch(PDO::FETCH_ASSOC);
 
             return $user;
@@ -277,10 +260,11 @@ class User
             $pdo->beginTransaction();
 
             // 論理削除
-            $query = sprintf("UPDATE `users` SET `deleted_at` = NOW() WHERE `id` = '%s';",
-                $user_id
-            );
-            $pdo->query($query);
+            $query = sprintf("UPDATE `users` SET `deleted_at` = NOW() WHERE `id` = ?;");
+            $stmh = $pdo->prepare($query);
+            $stmh->bindValue(1, $user_id);
+            $stmh->execute();
+
             $pdo->commit();
 
         }catch(PDOException $e){

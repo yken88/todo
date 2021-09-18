@@ -110,7 +110,6 @@ class Todo
         
     }
 
-    // 修正 $sortを渡せるように
     public static function search($user_id, $params, $offset, $sort = null){
         $query = self::buildQuery($params, $offset, $sort);
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
@@ -119,14 +118,16 @@ class Todo
         $stmh->execute($bindArr);
         $todo_list = $stmh->fetchAll(PDO::FETCH_ASSOC);
 
-
         return $todo_list;
     }
 
     public static function findById($todo_id)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query(sprintf("select * from todos where id = %s;", $todo_id));
+
+        $stmh = $pdo->prepare("SELECT * FROM `todos` WHERE id = ?;");
+        $stmh->bindValue(1, $todo_id);
+        $stmh->execute();
 
         if ($stmh) {
             $todo = $stmh->fetch(PDO::FETCH_ASSOC);
@@ -155,21 +156,27 @@ class Todo
     public function save()
     {
         try {
-            $query = sprintf("INSERT INTO `todos` (`title`, `detail`, `status`, `created_at`, `updated_at`, `user_id`) VALUES ('%s', '%s', 0, NOW(), NOW(), %d);",
-                $this->title,
-                $this->detail,
-                $this->user_id
-            );
+            $query = "INSERT INTO `todos` (`title`, `detail`, `status`, `created_at`, `updated_at`, `user_id`) VALUES (?, ?, 0, NOW(), NOW(), ?);";
 
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
-            $result = $pdo->query($query);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
 
-        } catch (Exception $e) {
-            // エラーログを残すことで、エラーの原因を調査しやすく。
+            $stmh = $pdo->prepare($query);
+            $stmh->bindValue(1, $this->title);
+            $stmh->bindValue(2, $this->detail);
+            $stmh->bindValue(3, $this->user_id);
+
+            $result = $stmh->execute();
+
+            $pdo->commit();
+        } catch (PDOException $e) {
             error_log("新規作成に失敗しました");
             error_log($e->getMessage());
-            // スタックトレイスを残す方法
             error_log($e->getTraceAsString());
+
+            $pdo->rollback();
+
             return false;
         }
 
@@ -179,23 +186,27 @@ class Todo
     public function update()
     {
         try {
-            $query = sprintf("UPDATE `todos` SET `title` = '%s', `detail` = '%s',`updated_at` =  '%s' WHERE id = '%s'",
-                $this->title,
-                $this->detail,
-                date("Y-m-d H:i:s"),
-                $this->id
-            );
-
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
-            $result = $pdo->query($query);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
 
-        } catch (Exception $e) {
-            // エラーログを残すことで、エラーの原因を調査しやすく。
+            $query = "UPDATE `todos` SET `title` = ?, `detail` = ?,`updated_at` =  ? WHERE id = ?;";
+
+            $stmh = $pdo->prepare($query);
+            $stmh->bindValue(1, $this->title);
+            $stmh->bindValue(2, $this->detail);
+            $stmh->bindValue(3, date("Y-m-d H:i:s"));
+            $stmh->bindValue(4, $this->id);
+            $stmh->execute();
+
+            $pdo->commit();
+
+        } catch (PDOException $e) {
             error_log("更新に失敗しました");
             error_log($e->getMessage());
-            // スタックトレイスを残す方法
             error_log($e->getTraceAsString());
 
+            $pdo->rollback();
             return false;
         }
 
@@ -205,13 +216,12 @@ class Todo
     public static function isExistById($todo_id)
     {
         $pdo = new PDO(DSN, USERNAME, PASSWORD);
-        $stmh = $pdo->query(sprintf("select * from todos where id = %s;", $todo_id));
 
-        if ($stmh) {
-            $todo = $stmh->fetch(PDO::FETCH_ASSOC);
-        } else {
-            $todo = array();
-        }
+        $stmh = $pdo->prepare("SELECT * FROM `todos` WHERE id = ?;");
+        $stmh->bindValue(1, $todo_id);
+        $stmh->execute();
+
+        $todo = $stmh->fetch(PDO::FETCH_ASSOC);
 
         if ($todo) {
             return true;
@@ -223,12 +233,11 @@ class Todo
     public function delete()
     {
         try {
-            $query = sprintf("DELETE FROM todos WHERE id = %s",
+            $query = sprintf("DELETE FROM `todos` WHERE `id` = %s",
                 $this->id
             );
 
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
-
             $result = $pdo->query($query);
 
         } catch (Exception $e) {
@@ -267,14 +276,19 @@ class Todo
 
     public static function deleteAll($user_id){
         try {
-            $query = sprintf("DELETE FROM `todos` WHERE `user_id` = %s",
-                $user_id
-            );
-
             $pdo = new PDO(DSN, USERNAME, PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+            $pdo->beginTransaction();
 
-            $result = $pdo->query($query);
+            $query = "DELETE FROM `todos` WHERE `user_id` = ?;";
+            $stmh = $pdo->prepare($query);
+            $stmh->bindValue(1, $user_id);
+            $stmh->execute();
 
+            $pdo->commit();
+
+            $result = $stmh->fetch();
+            
         } catch (Exception $e) {
             error_log("削除に失敗しました。");
             error_log($e->getMessage());
