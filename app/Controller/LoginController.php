@@ -32,8 +32,6 @@ class LoginController
         $user->setPassword($valid_data["password"]);
         $result = $user->login();
 
-        $user->setUserId();
-
         if ($result === false) {
             session_start();
             $_SESSION["error_msgs"] = $user->getErrorMessages();

@@ -125,10 +125,10 @@ class TodoController extends BaseController
         $todo = new Todo;
         $todo->setTitle($valid_data['title']);
         $todo->setDetail($valid_data['detail']);
-
-        $user_id = $_SESSION['user_id'];
-        $todo->setUserId($user_id);
+        
+        $todo->setUserId($_SESSION['user_id']);
         $result = $todo->save();
+
 
         if ($result === false) {
             $params = sprintf("?title=%s&detail=%s", $valid_data['title'], $valid_data['detail']);
@@ -233,7 +233,6 @@ class TodoController extends BaseController
             return;
         }
 
-        // うまくいけばindex.phpに遷移
         header("Location: ./index.php");
     }
 
